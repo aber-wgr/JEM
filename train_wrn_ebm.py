@@ -149,7 +149,9 @@ def get_data(args):
          lambda x: x + args.sigma * t.randn_like(x)]
     )
     def dataset_fn(train, transform):
-        if args.dataset == "cifar10":
+        if args.dataset == "imagefolder":
+            return tv.datasets.ImageFolder(root=args.data_root, transform=transform, target_transform=transform)
+        elif args.dataset == "cifar10":
             return tv.datasets.CIFAR10(root=args.data_root, transform=transform, download=True, train=train)
         elif args.dataset == "cifar100":
             return tv.datasets.CIFAR100(root=args.data_root, transform=transform, download=True, train=train)
@@ -190,12 +192,12 @@ def get_data(args):
     dset_valid = DataSubset(
         dataset_fn(True, transform_test),
         inds=valid_inds)
-    dload_train = DataLoader(dset_train, batch_size=args.batch_size, shuffle=True, num_workers=4, drop_last=True)
-    dload_train_labeled = DataLoader(dset_train_labeled, batch_size=args.batch_size, shuffle=True, num_workers=4, drop_last=True)
+    dload_train = DataLoader(dset_train, batch_size=args.batch_size, shuffle=True, num_workers=0, drop_last=True)
+    dload_train_labeled = DataLoader(dset_train_labeled, batch_size=args.batch_size, shuffle=True, num_workers=0, drop_last=True)
     dload_train_labeled = cycle(dload_train_labeled)
     dset_test = dataset_fn(False, transform_test)
-    dload_valid = DataLoader(dset_valid, batch_size=100, shuffle=False, num_workers=4, drop_last=False)
-    dload_test = DataLoader(dset_test, batch_size=100, shuffle=False, num_workers=4, drop_last=False)
+    dload_valid = DataLoader(dset_valid, batch_size=100, shuffle=False, num_workers=0, drop_last=False)
+    dload_test = DataLoader(dset_test, batch_size=100, shuffle=False, num_workers=0, drop_last=False)
     return dload_train, dload_train_labeled, dload_valid,dload_test
 
 
@@ -398,7 +400,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Energy Based Models and Shit")
-    parser.add_argument("--dataset", type=str, default="cifar10", choices=["cifar10", "svhn", "cifar100"])
+    parser.add_argument("--dataset", type=str, default="cifar10", choices=["cifar10", "svhn", "cifar100","imagefolder"])
     parser.add_argument("--data_root", type=str, default="../data")
     # optimization
     parser.add_argument("--lr", type=float, default=1e-4)
