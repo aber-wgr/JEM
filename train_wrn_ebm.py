@@ -128,7 +128,8 @@ def get_model_and_buffer(args, device, sample_q):
 def get_data(args):
     if args.dataset == "svhn":
         transform_train = tr.Compose(
-            [tr.Pad(4, padding_mode="reflect"),
+            [tr.ToPILImage(),
+             tr.Pad(4, padding_mode="reflect"),
              tr.RandomCrop(im_sz),
              tr.ToTensor(),
              tr.Normalize((.5, .5, .5), (.5, .5, .5)),
@@ -136,7 +137,8 @@ def get_data(args):
         )
     else:
         transform_train = tr.Compose(
-            [tr.Pad(4, padding_mode="reflect"),
+            [tr.ToPILImage(),
+             tr.Pad(4, padding_mode="reflect"),
              tr.RandomCrop(im_sz),
              tr.RandomHorizontalFlip(),
              tr.ToTensor(),
