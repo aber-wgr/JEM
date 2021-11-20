@@ -128,7 +128,7 @@ def get_model_and_buffer(args, device, sample_q):
 def get_data(args):
     if args.dataset == "svhn":
         transform_train = tr.Compose(
-            [tr.ToPILImage(),
+            [
              tr.Pad(4, padding_mode="reflect"),
              tr.RandomCrop(im_sz),
              tr.ToTensor(),
@@ -137,7 +137,7 @@ def get_data(args):
         )
     else:
         transform_train = tr.Compose(
-            [tr.ToPILImage(),
+            [
              tr.Pad(4, padding_mode="reflect"),
              tr.RandomCrop(im_sz),
              tr.RandomHorizontalFlip(),
@@ -152,7 +152,7 @@ def get_data(args):
     )
     def dataset_fn(train, transform):
         if args.dataset == "imagefolder":
-            return tv.datasets.ImageFolder(root=args.data_root, transform=transform, target_transform=transform)
+            return tv.datasets.ImageFolder(root=args.data_root, transform=transform, target_transform=None)
         elif args.dataset == "cifar10":
             return tv.datasets.CIFAR10(root=args.data_root, transform=transform, download=True, train=train)
         elif args.dataset == "cifar100":
