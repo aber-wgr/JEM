@@ -15,7 +15,7 @@
 
 import utils
 import torch as t, torch.nn as nn, torch.nn.functional as tnnF, torch.distributions as tdist
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 import torchvision as tv, torchvision.transforms as tr
 import os
 import sys
@@ -194,9 +194,25 @@ def get_data(args):
     dset_valid = DataSubset(
         dataset_fn(True, transform_test),
         inds=valid_inds)
-    dload_train = DataLoader(dset_train, batch_size=args.batch_size, shuffle=True, num_workers=0, drop_last=True)
+    dload_train = DataLoader(dset_train, batch_size=args.batch_size, shuffle=(train_sampler is None), sampler=train_sampler, num_workers=0, drop_last=True)
     dload_train_labeled = DataLoader(dset_train_labeled, batch_size=args.batch_size, shuffle=True, num_workers=0, drop_last=True)
     dload_train_labeled = cycle(dload_train_labeled)
+    
+    class_count = {}
+    weights = {}
+    train_sampler = None
+    if(args.n_classes > 1):
+        for x_lab, y_lab in enumerate(dset_train_labeled):
+            if(class_count[y_lab] == None):
+                class_count[y_lab] == 1
+            else:
+                class_count[y_lab] += 1
+        print("Weights Output:")
+        for key,value in class_count:
+            weights[key] = value / len(dset_train_labeled)
+            print("Class:" + str(key) + " Weight:" + str(weights[key]))
+        train_sampler = WeightedRandomSampler(weights, len(dset_train_labeled),replacement=False)
+
     dset_test = dataset_fn(False, transform_test)
     dload_valid = DataLoader(dset_valid, batch_size=100, shuffle=False, num_workers=0, drop_last=False)
     dload_test = DataLoader(dset_test, batch_size=100, shuffle=False, num_workers=0, drop_last=False)
