@@ -194,26 +194,36 @@ def get_data(args):
     dset_valid = DataSubset(
         dataset_fn(True, transform_test),
         inds=valid_inds)
-    dload_train = DataLoader(dset_train, batch_size=args.batch_size, shuffle=(train_sampler is None), sampler=train_sampler, num_workers=0, drop_last=True)
-    dload_train_labeled = DataLoader(dset_train_labeled, batch_size=args.batch_size, shuffle=True, num_workers=0, drop_last=True)
-    dload_train_labeled = cycle(dload_train_labeled)
-    
+        
     class_count = {}
-    weights = {}
+    class_weights = {}
     train_sampler = None
+    class_index = []
     if(args.n_classes > 1):
         for x_lab, y_lab in enumerate(dset_train_labeled):
-            if(class_count[y_lab] == None):
-                class_count[y_lab] == 1
+            cl = y_lab[1]
+            if(cl not in class_count):
+                class_count[cl] = 1
             else:
-                class_count[y_lab] += 1
+                class_count[cl] += 1
+            class_index.append(cl)
         print("Weights Output:")
-        for key,value in class_count:
-            weights[key] = value / len(dset_train_labeled)
-            print("Class:" + str(key) + " Weight:" + str(weights[key]))
+
+        for key in class_count:
+            value = class_count[key]
+            class_weights[key] = value / len(dset_train_labeled)
+            print("Class:" + str(key) + " Weight:" + str(class_weights[key]))
+        
+        weights = [0] * len(class_index)
+        for ci in range(len(class_index)):
+            weights[ci] = class_weights[class_index[ci]]
+
         train_sampler = WeightedRandomSampler(weights, len(dset_train_labeled),replacement=False)
 
     dset_test = dataset_fn(False, transform_test)
+    dload_train = DataLoader(dset_train, batch_size=args.batch_size, shuffle=(train_sampler is None), sampler=train_sampler, num_workers=0, drop_last=True)
+    dload_train_labeled = DataLoader(dset_train_labeled, batch_size=args.batch_size, shuffle=True, num_workers=0, drop_last=True)
+    dload_train_labeled = cycle(dload_train_labeled)
     dload_valid = DataLoader(dset_valid, batch_size=100, shuffle=False, num_workers=0, drop_last=False)
     dload_test = DataLoader(dset_test, batch_size=100, shuffle=False, num_workers=0, drop_last=False)
     return dload_train, dload_train_labeled, dload_valid,dload_test
